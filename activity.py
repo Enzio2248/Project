@@ -1,11 +1,12 @@
 from abc import ABC, abstractmethod
+from booking import Booking
 import uuid
 # -------------------------------------------------- 
 class Activity(ABC):
-    def __init__(self, activity_id, min_age):
+    def __init__(self, min_age):
         self._activity_id = f"ac-{uuid.uuid4().hex}"
         self._min_age = min_age
-        self._booking_list = []
+        self._booking_list : list[Booking] = []
         self._assigned_staff = []
 
     # add and remove booking 

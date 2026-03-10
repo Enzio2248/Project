@@ -16,7 +16,6 @@ from state import PurchaseStatus , StaffStatus , LogInStatus , OperationalStatus
 # ----------------------------------------------------
 class System:
     def __init__(self):
-        self.__user_list : list[Customer] = []
         self.__customer_list : list[Customer] = []
         self.__staff_list : list[Staff] = []
         self.__manager_list : list[Manager]= []
@@ -38,14 +37,18 @@ class System:
         self.__customer_list.append(customer)
 
     # authenticate & register
-    def authenticate(self, mail, password):
-        for customer in self.__customer_list:
-            if customer.email == mail and customer.check_password(password):
-                if customer.is_banned:
-                    raise HTTPException(status_code=403, detail="This account has been banned")
-                customer.login_status = LogInStatus.ONLINE
-                return {"message": "Login successful"}
-        raise HTTPException(status_code=401, detail="Invalid email or password")
+    def authenticate(self,user):
+        if isinstance(user, Customer):
+            for customer in self.__customer_list:
+                if customer.email == user.email and customer.check_password(user.password):
+                    if customer.is_banned:
+                        raise HTTPException(status_code=403, detail="This account has been banned")
+                    customer.login_status = LogInStatus.ONLINE
+                    return {"message": "Login successful"}
+            raise HTTPException(status_code=401, detail="Invalid email or password")
+        
+        else: raise HTTPException(status_code=401, detail="Type Error")
+
 
     def register(self, user_name, user_mail, password, age, driver_license):
         if "@" not in user_mail:

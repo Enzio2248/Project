@@ -28,7 +28,7 @@ class User(ABC):
         self._driver_license = value
 
 class Customer(User):
-    def __init__(self, user_name, user_mail, password, age, driver_license):
+    def __init__(self, user_name, user_mail, password, age, driver_license = ""):
         super().__init__(user_name, driver_license)
         self.__user_mail = user_mail
         self.__password = password
