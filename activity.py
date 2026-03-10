@@ -1,9 +1,9 @@
 from abc import ABC, abstractmethod
-
+import uuid
 # -------------------------------------------------- 
 class Activity(ABC):
     def __init__(self, activity_id, min_age):
-        self._activity_id = activity_id
+        self._activity_id = f"ac-{uuid.uuid4().hex}"
         self._min_age = min_age
         self._booking_list = []
         self._assigned_staff = []

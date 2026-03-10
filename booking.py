@@ -1,9 +1,10 @@
 from otherclass import DamageItem
 from state import PurchaseStatus 
+import uuid
 # --------------------------------------------------
 class Booking:
-    def __init__(self, booking_id, user):
-        self.__booking_id = booking_id
+    def __init__(self,  user):
+        self.__booking_id = f"booking-{uuid.uuid4().hex}"
         self.__user = user
         self.__purchase_status = PurchaseStatus.BOOKING
         self.__residencebooking_list = []
@@ -127,8 +128,8 @@ class Booking:
         return None
 
 class Residencebooking:
-    def __init__(self, id, residence, room, user, time, price):
-        self.__id = id
+    def __init__(self, residence, room, user, time, price):
+        self.__id = f"rb-{uuid.uuid4().hex}"
         self.__user = user
         self.__residence = residence
         self.__room = room
@@ -162,7 +163,7 @@ class Residencebooking:
         return self.__id
 
     @property
-    def user(self): 
+    def user(self):
         return self.__user
 
     @property
@@ -186,8 +187,8 @@ class Residencebooking:
         return self.__status
 
 class Vehiclebooking:
-    def __init__(self, id, vehicle, user, time, staff_driver, price):
-        self.__id = id
+    def __init__(self, vehicle, user, time, staff_driver, price):
+        self.__id = f"vb-{uuid.uuid4().hex}"
         self.__user = user
         self.__vehicle = vehicle
         self.__time = time
@@ -249,7 +250,7 @@ class Vehiclebooking:
 
 class Activitybooking:
     def __init__(self, id, activity, user, time):
-        self.__id = id
+        self.__id = f"ab-{uuid.uuid4().hex}"
         self.__user = user
         self.__activity = activity
         self.__time = time

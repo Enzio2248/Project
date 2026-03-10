@@ -1,11 +1,11 @@
 from abc import ABC, abstractmethod
-
+import uuid
 from vehicle import Vehicle
 from state import ServiceStatus
 # -------------------------------------------------- 
 class Vehicle(ABC):
-    def __init__(self, vehicle_id, capacity):
-        self._vehicle_id = vehicle_id
+    def __init__(self,  capacity):
+        self._vehicle_id = f"ve-{uuid.uuid4().hex}"
         self._status = ServiceStatus.ACTIVE
         self._capacity = capacity
         self._booking_list = []

@@ -1,15 +1,17 @@
+from __future__ import annotations
 from fastapi import HTTPException
 from abc import ABC, abstractmethod
 from state import OperationalStatus 
+import uuid
 # -------------------------------------------------- 
 class Residence:
-    def __init__(self, residence_id, residence_name):
-        self.__residence_id = residence_id
+    def __init__(self,  residence_name):
+        self.__residence_id = f"re-{uuid.uuid4().hex}"
         self.__residence_name = residence_name
-        self.__room_list = []
+        self.__room_list : list[Room] = []
     
     # add room
-    def add_room_list(self, room):
+    def add_room_list(self, room : Room):
         if any(r.room_id == room.room_id for r in self.__room_list):
             raise HTTPException(status_code=401, detail="Room ID already exists in this residence")
         self.__room_list.append(room)
@@ -29,8 +31,8 @@ class Residence:
         return self.__room_list
 
 class Room(ABC):
-    def __init__(self, room_id, capacity):
-        self._room_id = room_id
+    def __init__(self,  capacity):
+        self._room_id = f"room-{uuid.uuid4().hex}"
         self._capacity = capacity
         self._booking_list = []
         self._operational_status = OperationalStatus.READY
@@ -55,6 +57,10 @@ class Room(ABC):
     def remove_booking(self, residencebooking):
         if residencebooking in self._booking_list:
             self._booking_list.remove(residencebooking)
+
+    @property
+    def booking_list(self):
+        return self._booking_list
 
     # getter / settet
     @property

@@ -1,12 +1,13 @@
 from abc import ABC, abstractmethod
+import uuid
 from residence import Residence
 from user import User , Staff
 from state import StaffStatus , LogInStatus
 # -------------------------------------------------- 
 class User(ABC):
-    def __init__(self, user_name, user_id, driver_license):
+    def __init__(self, user_name, driver_license):
         self._user_name = user_name
-        self._user_id = user_id
+        self._user_id = f"user-{uuid.uuid4().hex}"
         self._driver_license = driver_license
     
     # getter / setter
@@ -21,14 +22,14 @@ class User(ABC):
     @property
     def driver_license(self):
         return self._driver_license
-
+    
     @driver_license.setter
     def driver_license(self, value):
         self._driver_license = value
 
 class Customer(User):
-    def __init__(self, user_name, user_id, user_mail, password, age, driver_license):
-        super().__init__(user_name, user_id, driver_license)
+    def __init__(self, user_name, user_mail, password, age, driver_license):
+        super().__init__(user_name, driver_license)
         self.__user_mail = user_mail
         self.__password = password
         self.__membership = "Bronze"
@@ -38,6 +39,9 @@ class Customer(User):
         self.__login_status = LogInStatus.OFFLINE
         self.__coupons = []
         self.__is_banned = False
+
+    def ban_user(self):
+        self.__is_banned = True
 
     # edit and check password
     def edit_profile(self, name, email):
@@ -55,6 +59,13 @@ class Customer(User):
     def unban(self):
         self.__is_banned = False
     
+
+    def login(self):
+        self.__login_status = LogInStatus.ONLINE
+
+    def logout(self):
+        self.__login_status = LogInStatus.OFFLINE
+
     # get coupon list
     def coupon_list(self):
         return [c for c in self.__coupons if not c.is_used]
@@ -92,10 +103,22 @@ class Customer(User):
     @property
     def login_status(self):
         return self.__login_status
+    
+    @login_status.setter
+    def login_status(self, status):
+        self.__login_status = status
 
     @property
     def coupons(self):
         return self.__coupons
+    
+    @property
+    def password(self):
+        return self.__password
+    
+    @property
+    def age(self):
+        return self.__age   
 
     @login_status.setter
     def login_status(self, value):

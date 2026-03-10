@@ -1,5 +1,5 @@
 from datetime import datetime
-
+import uuid
 # --------------------------------------------------
 class TimeSlot:
     def __init__(self, start_date, end_date):
@@ -19,6 +19,7 @@ class TimeSlot:
     @property
     def end_date(self): 
         return self.__end_date
+
 
 class DamageItem:
     def __init__(self, damage_id, description, price):
@@ -57,8 +58,8 @@ class DamageItem:
         return self.__price
 
 class Review:
-    def __init__(self, review_id, user_id, booking_id, rating, comment):
-        self.__review_id = review_id
+    def __init__(self, user_id, booking_id, rating, comment):
+        self.__review_id = f"review-{uuid.uuid4().hex}"
         self.__user_id = user_id
         self.__booking_id = booking_id
         self.__rating = rating      

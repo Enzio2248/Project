@@ -6,7 +6,7 @@ from pydantic import BaseModel
 import re
 
 from otherclass import TimeSlot , Review 
-from payment import Payment , Bank , Promotion
+from payment import Payment , Bank , Promotion , Coupon
 from booking import Booking , Residencebooking , Vehiclebooking , Activitybooking
 from user import Customer , Staff , Manager
 from residence import Residence 
@@ -16,35 +16,38 @@ from state import PurchaseStatus , StaffStatus , LogInStatus , OperationalStatus
 # ----------------------------------------------------
 class System:
     def __init__(self):
-        self.__user_list = []
-        self.__staff_list = []
-        self.__manager_list = []
-        self.__residence_list = []
-        self.__vehicle_list = []
-        self.__activity_list = []
-        self.__bookings = []           
-        self.__promotions = []
-        self.__selected_coupons = {}   
-        self.__reviews = []          
-
+        self.__user_list : list[Customer] = []
+        self.__customer_list : list[Customer] = []
+        self.__staff_list : list[Staff] = []
+        self.__manager_list : list[Manager]= []
+        self.__residence_list : list[Residence] = []
+        self.__vehicle_list : list[Vehicle] = []
+        self.__activity_list : list[Activity] = []
+        self.__bookings : list[Booking] = []           
+        self.__promotions : list[Promotion] = []
+        self.__selected_coupons : dict[str, Coupon] = {}   
+        self.__reviews : list[Review]= []          
 
     def is_manager(self, manager_id: str) -> bool:
         for manager in self.__manager_list:
             if(manager.user_id == manager_id):
                 return True
             return False
+        
+    def add_customer(self, customer):
+        self.__customer_list.append(customer)
 
     # authenticate & register
     def authenticate(self, mail, password):
-        for user in self.__user_list:
-            if user.email == mail and user.check_password(password):
-                if user.is_banned:
+        for customer in self.__customer_list:
+            if customer.email == mail and customer.check_password(password):
+                if customer.is_banned:
                     raise HTTPException(status_code=403, detail="This account has been banned")
-                user.login_status = LogInStatus.ONLINE
+                customer.login_status = LogInStatus.ONLINE
                 return {"message": "Login successful"}
         raise HTTPException(status_code=401, detail="Invalid email or password")
 
-    def register(self, user_name, user_id, user_mail, password, age, driver_license):
+    def register(self, user_name, user_mail, password, age, driver_license):
         if "@" not in user_mail:
             raise HTTPException(status_code=400, detail="Invalid email format (must contain @)")
         if len(password) < 9:
@@ -56,9 +59,9 @@ class System:
         if not re.search(r"\d", password):
             raise HTTPException(status_code=400, detail="Password must contain at least one digit")
         for existing_user in self.__user_list:
-            if existing_user.user_id == user_id or existing_user.email == user_mail:
+            if existing_user.email == user_mail:
                 raise HTTPException(status_code=400, detail="User ID or Email already exists")
-        new_user = Customer(user_name, user_id, user_mail, password, age, driver_license)
+        new_user = Customer(user_name, user_mail, password, age, driver_license)
         self.__user_list.append(new_user)
         return {"message": "User registered successfully"}
 
@@ -137,11 +140,11 @@ class System:
             and start_date < end_date
         )
 
-    def create_booking(self, user_id, booking_id):
+    def create_booking(self, user_id):
         user = next((u for u in self.__user_list if u.user_id == user_id),None)
 
         if not user :
-            raise HTTPException (status_code=404, detail="User nat fount")
+            raise HTTPException(status_code=404, detail="User not found")
         
         if user.is_banned:
             raise HTTPException(status_code=403, detail="Banned users cannot make bookings")
@@ -149,12 +152,16 @@ class System:
         if user.login_status != LogInStatus.ONLINE:
             raise HTTPException(status_code=401, detail="User must be logged in ")
         
-        new_booking = Booking(booking_id,user)
+
+        new_booking = Booking(user)
 
         self.__bookings.append(new_booking)
         user.add_booking_list(new_booking)
 
-        return new_booking
+        return {
+            "booking_id": new_booking.booking_id,
+            "user_id": user_id
+        }
 
     def select_residence(self, residence_id, room_id):
         for residence in self.__residence_list:
@@ -199,7 +206,7 @@ class System:
     def check_driver_license(self, driver_id):
         for driver in self.__staff_list:
             if driver.staff_id == driver_id:
-                return driver.driver_license == "Have"
+                return driver.driver_license != ""
         raise HTTPException(status_code=400, detail="Error Check Driverlicense")
 
     def select_vehicle(self, vehicle_id):
@@ -207,7 +214,7 @@ class System:
             if isinstance(vehicle, Vehicle) and vehicle.vehicle_id == vehicle_id:
                 return vehicle
         raise HTTPException(status_code=404, detail="Vehicle not found")
-
+    
     def create_vehiclebooking(self, user_id, booking, b_id, vehicle_id, driver_id, start_date, end_date):
         if not self.validate_date(start_date, end_date):
             raise HTTPException(status_code=400, detail="Invalid booking dates")
@@ -285,7 +292,7 @@ class System:
         if not booking:
             raise HTTPException(status_code=404, detail="Booking not found")
 
-        is_manager = any(m.staff_id == requester_id for m in self.__manager_list)
+        is_manager = any(m.user_id == requester_id for m in self.__manager_list)
         is_owner = booking.user_id == requester_id
 
         if not is_manager and not is_owner:
@@ -294,7 +301,7 @@ class System:
         if not is_manager and booking.purchase_status != PurchaseStatus.BOOKING:
             raise HTTPException(status_code=400, detail="Can only cancel bookings with status BOOKING")
 
-        for rb in booking.residence_list:
+        for rb in booking.residencebooking_list:
             rb.room.remove_booking(rb)
             rb.update_status(PurchaseStatus.CANCELLED)
 
@@ -310,7 +317,7 @@ class System:
 
         booking.cancel()
         return {"message": f"Booking {booking_id} has been cancelled"}
-
+    
     def ban_user(self, manager_id, user_id):
         is_manager = any(m.staff_id == manager_id for m in self.__manager_list)
         if not is_manager:
@@ -411,7 +418,7 @@ class System:
         if not booking:
             return {"error": "Booking not found"}
         return {"message": booking.start_room_inspection()}
-
+    
     def add_damage(self, booking_id, damage_id, description, price):
         booking = self._get_booking(booking_id)
         if not booking:
@@ -440,7 +447,7 @@ class System:
             "base_price": base,
             "promotion_discount": promo,
             "membership_discount": member,
-            "available_coupons": user.coupon_list()
+            "available_coupons": [c.code for c in user.coupon_list()]
         }
 
     def select_coupon(self, user, booking, coupon_code):
