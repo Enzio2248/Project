@@ -61,11 +61,11 @@ class System:
             raise HTTPException(status_code=400, detail="Password must contain at least one lowercase letter")
         if not re.search(r"\d", password):
             raise HTTPException(status_code=400, detail="Password must contain at least one digit")
-        for existing_user in self.__user_list:
+        for existing_user in self.__customer_list:
             if existing_user.email == user_mail:
                 raise HTTPException(status_code=400, detail="User ID or Email already exists")
         new_user = Customer(user_name, user_mail, password, age, driver_license)
-        self.__user_list.append(new_user)
+        self.__customer_list.append(new_user)
         return {"message": "User registered successfully"}
 
     # add resource by manager
@@ -83,6 +83,8 @@ class System:
         return {"message": f"Residence {residence.residence_name} added successfully"}
 
     def add_vehicle(self, vehicle, manager_id):
+        if not isinstance(vehicle, Vehicle):
+            raise HTTPException(status_code=403, detail="vehicle type Error")
         if not self.is_manager(manager_id):
             raise HTTPException(status_code=403, detail="Permission denied: Only managers can add activities")
         if any(v.vehicle_id == vehicle.vehicle_id for v in self.__vehicle_list):
@@ -92,6 +94,8 @@ class System:
         self.__vehicle_list.append(vehicle)
 
     def add_activity(self, manager_id, activity):
+        if not isinstance(activity, Activity):
+            raise HTTPException(status_code=403, detail="activity type Error")
         if not self.is_manager(manager_id):
             raise HTTPException(status_code=403, detail="Permission denied: Only managers can add activities")
         if not isinstance(activity, Activity):
@@ -144,7 +148,7 @@ class System:
         )
 
     def create_booking(self, user_id):
-        user = next((u for u in self.__user_list if u.user_id == user_id),None)
+        user = next((u for u in self.__customer_list if u.user_id == user_id),None)
 
         if not user :
             raise HTTPException(status_code=404, detail="User not found")
@@ -174,10 +178,10 @@ class System:
                         return residence, room
         raise HTTPException(status_code=404, detail="Residence or Room not found")
 
-    def create_residencebooking(self, user_id, booking, id, residence_id, room_id, start_date, end_date):
+    def create_residencebooking(self, user_id, booking_id , id, residence_id, room_id, start_date, end_date):
         if not self.validate_date(start_date, end_date):
             raise HTTPException(status_code=400, detail="Invalid booking dates")
-        user = next((u for u in self.__user_list if u.user_id == user_id), None)
+        user = next((u for u in self.__customer_list if u.user_id == user_id), None)
         if not user:
             raise HTTPException(status_code=400, detail="User not found")
         if user.is_banned:
@@ -201,6 +205,13 @@ class System:
         time_slot = TimeSlot(start_date, end_date)
         new_residence_booking = Residencebooking(id, residence, room, user, time_slot, price=room.price)
 
+        booking = None
+        for b in self.__bookings:
+            if b.booking_id == booking_id:
+                booking = b
+        if not booking:
+            raise HTTPException(status_code=404, detail="Booking not found")
+
         room.add_booking_list(new_residence_booking)
         user.add_booking_list(new_residence_booking)
         booking.add_residencebooking_list(new_residence_booking)
@@ -218,10 +229,10 @@ class System:
                 return vehicle
         raise HTTPException(status_code=404, detail="Vehicle not found")
     
-    def create_vehiclebooking(self, user_id, booking, b_id, vehicle_id, driver_id, start_date, end_date):
+    def create_vehiclebooking(self, user_id, booking_id, b_id, vehicle_id, driver_id, start_date, end_date):
         if not self.validate_date(start_date, end_date):
             raise HTTPException(status_code=400, detail="Invalid booking dates")
-        user = next((u for u in self.__user_list if u.user_id == user_id), None)
+        user = next((u for u in self.__customer_list if u.user_id == user_id), None)
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
         if user.is_banned:
@@ -235,6 +246,13 @@ class System:
             raise HTTPException(status_code=400, detail="Vehicle is currently out of service")
         if not vehicle.is_available(start_date, end_date):
             raise HTTPException(status_code=400, detail="Vehicle is already booked for these dates")
+        
+        booking = None
+        for b in self.__bookings:
+            if b.booking_id == booking_id:
+                booking = b
+        if not booking:
+            raise HTTPException(status_code=404, detail="Booking not found")
 
         staff_to_assign = None
         if user.driver_license == "Have":
@@ -263,16 +281,23 @@ class System:
                 return activity
         raise HTTPException(status_code=404, detail="Activity not found")
 
-    def create_activitybooking(self, user_id, booking, b_id, activity_id, start_date, end_date):
+    def create_activitybooking(self, user_id, booking_id , b_id, activity_id, start_date, end_date):
         if not self.validate_date(start_date, end_date):
             raise HTTPException(status_code=400, detail="Error Validate Date")
-        user = next((u for u in self.__user_list if u.user_id == user_id), None)
+        user = next((u for u in self.__customer_list if u.user_id == user_id), None)
         if not user:
             raise HTTPException(status_code=400, detail="Not Found User")
         if user.is_banned:
             raise HTTPException(status_code=403, detail="Banned users cannot make bookings")
         if user.login_status != LogInStatus.ONLINE:
             raise HTTPException(status_code=400, detail="User must be logged in to book an activity")
+
+        booking = None
+        for b in self.__bookings:
+            if b.booking_id == booking_id:
+                booking = b
+        if not booking:
+            raise HTTPException(status_code=404, detail="Booking not found")
 
         activity = self.select_activity(activity_id)
         time_slot = TimeSlot(start_date, end_date)
@@ -283,8 +308,16 @@ class System:
         booking.add_activitybooking_list(new_activity_booking)
         return new_activity_booking
 
-    def confirm_booking(self, staff_id, booking):
+    def confirm_booking(self, staff_id, booking_id):
         staff_exists = any(s.staff_id == staff_id for s in self.__staff_list)
+        
+        booking = None
+        for b in self.__bookings:
+            if b.booking_id == booking_id:
+                booking = b
+        if not booking:
+            raise HTTPException(status_code=404, detail="Booking not found")
+        
         if staff_exists:
             booking.confirm()
             return {"message": f"Booking {booking.booking_id} confirmed by staff {staff_id}"}
@@ -326,7 +359,7 @@ class System:
         if not is_manager:
             raise HTTPException(status_code=403, detail="Permission denied: Only managers can ban users")
 
-        user = next((u for u in self.__user_list if u.user_id == user_id), None)
+        user = next((u for u in self.__customer_list if u.user_id == user_id), None)
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
 
@@ -342,15 +375,15 @@ class System:
         if not is_manager:
             raise HTTPException(status_code=403, detail="Permission denied: Only managers can unban users")
 
-        user = next((u for u in self.__user_list if u.user_id == user_id), None)
+        user = next((u for u in self.__customer_list if u.user_id == user_id), None)
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
 
         user.unban()
         return {"message": f"User {user_id} has been unbanned"}
 
-    def create_review(self, review_id, user_id, booking_id, rating, comment):
-        user = next((u for u in self.__user_list if u.user_id == user_id), None)
+    def create_review(self, user_id, booking_id, rating, comment):
+        user = next((u for u in self.__customer_list if u.user_id == user_id), None)
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
         if user.login_status != LogInStatus.ONLINE:
@@ -370,9 +403,9 @@ class System:
         if not (1 <= rating <= 5):
             raise HTTPException(status_code=400, detail="Rating must be between 1 and 5")
 
-        review = Review(review_id, user_id, booking_id, rating, comment)
+        review = Review (user_id, booking_id, rating, comment)
         self.__reviews.append(review)
-        return {"message": "Review created successfully", "review_id": review_id}
+        return {"message": "Review created successfully", "review_id": review.review_id}
 
     def process_expired_bookings(self):
         today = date.today()
@@ -406,6 +439,8 @@ class System:
         return {"message": f"Processed {expired_count} expired bookings"}
 
     def search_manager_by_id(self , manager):
+        if not isinstance(manager , Manager):
+            raise HTTPException(status_code=400, detail="invalid manager object")
         for managers in self.__manager_list:
             if managers.staff_id == manager.staff_id:
                 return manager
@@ -422,11 +457,11 @@ class System:
             return {"error": "Booking not found"}
         return {"message": booking.start_room_inspection()}
     
-    def add_damage(self, booking_id, damage_id, description, price):
+    def add_damage(self, booking_id, description, price):
         booking = self._get_booking(booking_id)
         if not booking:
             return {"error": "Booking not found"}
-        damage = booking.add_damage(damage_id, description, price)
+        damage = booking.add_damage(description, price)
         return {"damage_recorded": damage}
 
     def confirm_inspection_complete(self, booking_id, damaged=False):
@@ -441,6 +476,10 @@ class System:
 
     # payment
     def request_payment(self, user, booking):
+        if not isinstance(user , Customer):
+            raise HTTPException(status_code=400, detail="invalid manager object")
+        if not isinstance(booking , Booking):
+            raise HTTPException(status_code=400, detail="invalid manager object")
         items, base = booking.unpaid_items
         promo = max([p.valid_promotion(base) for p in self.__promotions], default=0)
         member = user.calculate_membership()
@@ -453,7 +492,21 @@ class System:
             "available_coupons": [c.code for c in user.coupon_list()]
         }
 
-    def select_coupon(self, user, booking, coupon_code):
+    def select_coupon(self, user_id, booking_id, coupon_code):
+        user = None
+        for u in self.__customer_list:
+            if u.user_id == user_id:
+                user = u
+        if not user:
+            raise HTTPException(status_code=404, detail="user not found")
+
+        booking = None
+        for b in self.__bookings:
+            if b.booking_id == booking_id:
+                booking = b
+        if not booking:
+            raise HTTPException(status_code=404, detail="Booking not found")
+
         items, base = booking.unpaid_items
         promo = max([p.valid_promotion(base) for p in self.__promotions], default=0)
         member = user.calculate_membership()
@@ -475,7 +528,21 @@ class System:
             "final_price": final_price
         }
 
-    def submit_slip_number(self, user, booking, slip):
+    def submit_slip_number(self, user_id, booking_id , slip):
+        user = None
+        for u in self.__customer_list:
+            if u.user_id == user_id:
+                user = u
+        if not user:
+            raise HTTPException(status_code=404, detail="user not found")
+
+        booking = None
+        for b in self.__bookings:
+            if b.booking_id == booking_id:
+                booking = b
+        if not booking:
+            raise HTTPException(status_code=404, detail="Booking not found")
+
         items, base = booking.unpaid_items
         if base == 0:
             raise HTTPException(400, "Nothing to pay")

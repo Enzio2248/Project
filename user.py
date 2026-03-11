@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 import uuid
 from state import StaffStatus , LogInStatus
+from payment import Coupon
+from booking import Booking
 # -------------------------------------------------- 
 class User(ABC):
     def __init__(self, user_name, driver_license):
@@ -32,10 +34,10 @@ class Customer(User):
         self.__password = password
         self.__membership = "Bronze"
         self.__age = age
-        self.__booking_list = []
+        self.__booking_list : list[Booking] = []
         self.__total_spent = 0
         self.__login_status = LogInStatus.OFFLINE
-        self.__coupons = []
+        self.__coupons : list[Coupon] = []
         self.__is_banned = False
 
     def ban_user(self):

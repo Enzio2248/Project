@@ -1,16 +1,23 @@
 from otherclass import DamageItem
 from state import PurchaseStatus 
 import uuid
+from residence import Residence , Room
+from vehicle import Vehicle
+from activity import Activity
+from otherclass import TimeSlot
+from user import User , Staff , Customer
+from otherclass import DamageItem 
+from booking import Residencebooking , Vehiclebooking , Activitybooking
 # --------------------------------------------------
 class Booking:
     def __init__(self,  user):
         self.__booking_id = f"booking-{uuid.uuid4().hex}"
-        self.__user = user
+        self.__user : Customer = user
         self.__purchase_status = PurchaseStatus.BOOKING
-        self.__residencebooking_list = []
-        self.__vehiclebooking_list = []
-        self.__activitybooking_list = []
-        self.__damage_list = []
+        self.__residencebooking_list : list[Residencebooking]= []
+        self.__vehiclebooking_list : list[Vehiclebooking]= []
+        self.__activitybooking_list :list[Activitybooking] = []
+        self.__damage_list : list[DamageItem] = []
     
     # add resource and daamage 
     def add_residencebooking_list(self, residencebooking):
@@ -64,7 +71,7 @@ class Booking:
         total -= coupon_value
         return max(total, 0)
 
-    def mark_items_paid(self, items, final_price):
+    def mark_items_paid(self, items:list[DamageItem , Residencebooking , Vehiclebooking , Activitybooking], final_price):
         for item in items:
             item.mark_paid()
         self.__user.add_spent(final_price)
@@ -130,10 +137,10 @@ class Booking:
 class Residencebooking:
     def __init__(self, residence, room, user, time, price):
         self.__id = f"rb-{uuid.uuid4().hex}"
-        self.__user = user
-        self.__residence = residence
-        self.__room = room
-        self.__time = time
+        self.__user : User = user
+        self.__residence : Residence = residence
+        self.__room : Room = room
+        self.__time :TimeSlot = time
         self.__price = price
         self.__status = PurchaseStatus.BOOKING
         self.__paid = False
@@ -189,10 +196,10 @@ class Residencebooking:
 class Vehiclebooking:
     def __init__(self, vehicle, user, time, staff_driver, price):
         self.__id = f"vb-{uuid.uuid4().hex}"
-        self.__user = user
-        self.__vehicle = vehicle
-        self.__time = time
-        self.__driver = staff_driver
+        self.__user : User = user
+        self.__vehicle : Vehicle = vehicle
+        self.__time : TimeSlot = time
+        self.__driver : Staff = staff_driver
         self.__price = price
         self.__status = PurchaseStatus.BOOKING
         self.__paid = False
@@ -249,11 +256,11 @@ class Vehiclebooking:
         return self.__status
 
 class Activitybooking:
-    def __init__(self, id, activity, user, time):
+    def __init__(self, activity : Activity, user, time):
         self.__id = f"ab-{uuid.uuid4().hex}"
-        self.__user = user
-        self.__activity = activity
-        self.__time = time
+        self.__user : User = user
+        self.__activity : Activity = activity
+        self.__time : TimeSlot = time
         self.__price = activity.price
         self.__status = PurchaseStatus.BOOKING
         self.__paid = False

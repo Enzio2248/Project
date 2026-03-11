@@ -4,36 +4,19 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from datetime import datetime
 
-from mock_data import (
-    setup_login_mock, setup_register_mock, setup_booking_mock,
-    setup_residence_mock, setup_vehicle_mock, setup_activity_mock,
-    setup_cancel_mock, setup_payment_mock, setup_confirm_mock,
-    setup_inspection_mock, setup_review_mock
-)
+from mock_data import test_mockup_data 
 
 app = FastAPI()
 
-# mock data
-login_system = setup_login_mock()
-register_system = setup_register_mock()
-booking_system = setup_booking_mock()
-residence_system, booking = setup_residence_mock()
-vehicle_system, vehicle_booking = setup_vehicle_mock()
-activity_system, activity_booking = setup_activity_mock()
-cancel_system = setup_cancel_mock()
-payment_system, payment_user, payment_booking = setup_payment_mock()
-confirm_system, confirm_booking = setup_confirm_mock()
-inspection_system, inspection_booking = setup_inspection_mock()
-review_system, review_user, review_booking = setup_review_mock()
+system = test_mockup_data()
 
-# request models
+
 class LoginRequest(BaseModel):
     email: str
     password: str
 
 class RegisterRequest(BaseModel):
     user_name: str
-    user_id: str
     email: str
     password: str
     age: int
@@ -45,6 +28,7 @@ class CreateBookingRequest(BaseModel):
 class ResidenceBookingRequest(BaseModel):
     user_id: str
     residence_id: str
+    booking_id: str
     room_id: str
     start_date: datetime
     end_date: datetime
@@ -52,13 +36,15 @@ class ResidenceBookingRequest(BaseModel):
 class VehicleBookingRequest(BaseModel):
     user_id: str
     vehicle_id: str
-    driver_id: str | None = None
+    booking_id: str
+    driver_id: str | None 
     start_date: datetime
     end_date: datetime
 
 class ActivityBookingRequest(BaseModel):
     user_id: str
     activity_id: str
+    booking_id: str
     start_date: datetime
     end_date: datetime
 
@@ -70,12 +56,10 @@ class PaymentRequest(BaseModel):
     user_id: str
     booking_id: str
 
-
 class CouponRequest(BaseModel):
     user_id: str
     booking_id: str
     coupon_code: str
-
 
 class SlipRequest(BaseModel):
     user_id: str
@@ -84,13 +68,13 @@ class SlipRequest(BaseModel):
 
 class ConfirmRequest(BaseModel):
     staff_id: str
+    booking_id: str
 
 class StartInspectionRequest(BaseModel):
     booking_id: str
 
 class DamageRequest(BaseModel):
     booking_id: str
-    damage_id: str
     description: str
     price: float
 
@@ -99,8 +83,6 @@ class ConfirmInspectionRequest(BaseModel):
     damaged: bool
 
 class ReviewRequest(BaseModel):
-
-    review_id: str
     user_id: str
     booking_id: str
     rating: int
@@ -109,16 +91,15 @@ class ReviewRequest(BaseModel):
 # API endpoints
 @app.post("/login")
 def login(data: LoginRequest):
-    return login_system.authenticate(
+    return system.authenticate(
         data.email,
         data.password
     )
 
 @app.post("/register")
 def register(data: RegisterRequest):
-    return register_system.register(
+    return system.register(
         data.user_name,
-        data.user_id,
         data.email,
         data.password,
         data.age,
@@ -127,16 +108,16 @@ def register(data: RegisterRequest):
 
 @app.post("/create-booking")
 def create_booking(data: CreateBookingRequest):
-    return booking_system.create_booking(
+    return system.create_booking(
         data.user_id
     )
 
 @app.post("/book-residence")
 def book_residence(data: ResidenceBookingRequest):
 
-    result = residence_system.create_residencebooking(
+    result = system.create_residencebooking(
         data.user_id,
-        booking,
+        data.booking_id,
         data.residence_id,
         data.room_id,
         data.start_date,
@@ -148,9 +129,9 @@ def book_residence(data: ResidenceBookingRequest):
 @app.post("/book-vehicle")
 def book_vehicle(data: VehicleBookingRequest):
 
-    result = vehicle_system.create_vehiclebooking(
+    result = system.create_vehiclebooking(
         data.user_id,
-        vehicle_booking,
+        data.booking_id,
         data.vehicle_id,
         data.driver_id,
         data.start_date,
@@ -162,9 +143,9 @@ def book_vehicle(data: VehicleBookingRequest):
 @app.post("/book-activity")
 def book_activity(data: ActivityBookingRequest):
 
-    result = activity_system.create_activitybooking(
+    result = system.create_activitybooking(
         data.user_id,
-        activity_booking,
+        data.booking_id,
         data.activity_id,
         data.start_date,
         data.end_date
@@ -175,15 +156,7 @@ def book_activity(data: ActivityBookingRequest):
 @app.post("/cancel-booking")
 def cancel_booking(data: CancelBookingRequest):
 
-    return cancel_system.cancel_booking(
-        data.booking_id,
-        data.requester_id
-    )
-
-@app.post("/cancel-booking")
-def cancel_booking(data: CancelBookingRequest):
-
-    result = cancel_system.cancel_booking(
+    result = system.cancel_booking(
         data.booking_id,
         data.requester_id
     )
@@ -193,7 +166,7 @@ def cancel_booking(data: CancelBookingRequest):
 @app.post("/request-payment")
 def request_payment(data: PaymentRequest):
 
-    return payment_system.request_payment(
+    return system.request_payment(
         data.user_id,
         data.booking_id
     )
@@ -202,9 +175,9 @@ def request_payment(data: PaymentRequest):
 @app.post("/select-coupon")
 def select_coupon(data: CouponRequest):
 
-    return payment_system.select_coupon(
-        payment_user,
-        payment_booking,
+    return system.select_coupon(
+        data.user_id,
+        data.booking_id,
         data.coupon_code
     )
 
@@ -212,24 +185,24 @@ def select_coupon(data: CouponRequest):
 @app.post("/submit-payment")
 def submit_payment(data: SlipRequest):
 
-    return payment_system.submit_slip_number(
-        payment_user,
-        payment_booking,
+    return system.submit_slip_number(
+        data.user_id,
+        data.booking_id,
         data.slip
     )
 
 @app.post("/confirm-booking")
 def confirm_booking(data: ConfirmRequest):
 
-    return confirm_system.confirm_booking(
+    return system.confirm_booking(
         data.staff_id,
-        confirm_booking
+        data.booking_id
     )
 
 @app.post("/start-inspection")
 def start_inspection(data: StartInspectionRequest):
 
-    return inspection_system.start_room_inspection(
+    return system.start_room_inspection(
         data.booking_id
     )
 
@@ -237,9 +210,8 @@ def start_inspection(data: StartInspectionRequest):
 @app.post("/add-damage")
 def add_damage(data: DamageRequest):
 
-    return inspection_system.add_damage(
+    return system.add_damage(
         data.booking_id,
-        data.damage_id,
         data.description,
         data.price
     )
@@ -248,7 +220,7 @@ def add_damage(data: DamageRequest):
 @app.post("/confirm-inspection")
 def confirm_inspection(data: ConfirmInspectionRequest):
 
-    return inspection_system.confirm_inspection_complete(
+    return system.confirm_inspection_complete(
         data.booking_id,
         data.damaged
     )
@@ -256,8 +228,7 @@ def confirm_inspection(data: ConfirmInspectionRequest):
 @app.post("/write-review")
 def write_review(data: ReviewRequest):
 
-    return review_system.create_review(
-        data.review_id,
+    return system.create_review(
         data.user_id,
         data.booking_id,
         data.rating,

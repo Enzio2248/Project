@@ -1,10 +1,12 @@
 from datetime import datetime, date
+from otherclass import DamageItem 
+from booking import Residencebooking , Vehiclebooking , Activitybooking
 
 # --------------------------------------------------
 class Payment:
     # abstactmethod
     @staticmethod
-    def generate_receipt(items, total_amount):
+    def generate_receipt(items:list[DamageItem , Residencebooking , Vehiclebooking , Activitybooking], total_amount):
         item_list = [(item.item_id, item.__class__.__name__, item.price) for item in items]
         return {
             "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
@@ -15,7 +17,7 @@ class Payment:
 class Bank:
     # verify
     @staticmethod
-    def verify_transfer(slip):
+    def verify_transfer(slip : str):
         return slip and slip.startswith("OK")
 
 class Coupon:

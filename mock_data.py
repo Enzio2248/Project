@@ -10,7 +10,7 @@ from payment import Promotion, Coupon
 from state import LogInStatus, PurchaseStatus
 
 
-def setup_login_mock():
+def test_mockup_data():
 
     system = System()
 
@@ -67,13 +67,13 @@ def setup_login_mock():
     system.add_vehicle(car1)
     system.add_vehicle(bike1)
 
-    vehicle_booking_temp = Vehiclebooking(customer2)
+    vehicle_booking_temp = Vehiclebooking(car1, customer2, None, driver_a, 200)
 
     # ---------------- Activities ----------------
     driving_activity = Driving()
     hiking_activity = Hiking()
 
-    activity_booking_temp = Activitybooking(customer2)
+    activity_booking_temp = Activitybooking(driving_activity, customer2, None)
 
     # ---------------- Manager ----------------
     boss_manager = Manager("Boss", "Have")
@@ -113,8 +113,8 @@ def setup_login_mock():
     item1 = MockItem(1, 1000)
     item2 = MockItem(2, 500)
 
-    booking_mike.add_booking(item1)
-    booking_mike.add_booking(item2)
+    booking_mike.add_residencebooking_list(item1)
+    booking_mike.add_vehiclebooking_list(item2)
 
     promo = Promotion(
         0.10,
@@ -122,7 +122,7 @@ def setup_login_mock():
         date.today() + timedelta(days=5)
     )
 
-    system.add_promotions(promo)
+    system.add_promotion(promo)
 
     coupon = Coupon(
         50,
@@ -136,7 +136,7 @@ def setup_login_mock():
     mock_booking = Booking(mock_staff_user)
 
     booking_mock = Booking()
-    mock_booking._Booking__residencebooking_list.append(booking_mock)
+    mock_booking.add_residencebooking_list(booking_mock)
 
     system.add_booking(mock_booking)
 
@@ -149,15 +149,15 @@ def setup_login_mock():
         "DL111"
     )
 
-    alice_customer._Customer__login_status = LogInStatus.ONLINE
+    system.add_customer(alice_customer)
+    system.authenticate(alice_customer)
 
     completed_booking = Booking(alice_customer)
-    completed_booking._Booking__purchase_status = PurchaseStatus.COMPLETED
+    completed_booking.confirm()
 
-    system.add_user(alice_customer)
     system.add_booking(completed_booking)
 
-    return system, alice_customer, completed_booking
+    return system
 
 
 class DummyActivity:

@@ -1,13 +1,14 @@
 from abc import ABC, abstractmethod
-from booking import Booking
+from booking import Activitybooking
+from user import Staff
 import uuid
 # -------------------------------------------------- 
 class Activity(ABC):
     def __init__(self, min_age):
         self._activity_id = f"ac-{uuid.uuid4().hex}"
         self._min_age = min_age
-        self._booking_list : list[Booking] = []
-        self._assigned_staff = []
+        self._booking_list : list[Activitybooking] = []
+        self._assigned_staff : list[Staff]= []
 
     # add and remove booking 
     def add_booking_list(self, activitybooking):
@@ -24,7 +25,7 @@ class Activity(ABC):
                 return False
         return True
     
-    def assign_staff(self, staff):
+    def assign_staff(self, staff : Staff):
         if staff.is_available_to_work() and staff.assign_work():
             self._assigned_staff.append(staff)
             return True

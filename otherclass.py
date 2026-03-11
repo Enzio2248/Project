@@ -3,8 +3,8 @@ import uuid
 # --------------------------------------------------
 class TimeSlot:
     def __init__(self, start_date, end_date):
-        self.__start_date = start_date
-        self.__end_date = end_date
+        self.__start_date : datetime = start_date
+        self.__end_date  : datetime = end_date
     
     # getter / setter
     @property
@@ -22,8 +22,8 @@ class TimeSlot:
 
 
 class DamageItem:
-    def __init__(self, damage_id, description, price):
-        self.__damage_id = damage_id
+    def __init__(self, description, price):
+        self.__damage_id = f"d-{uuid.uuid4().hex}"
         self.__description = description
         self.__price = price
         self.__paid = False

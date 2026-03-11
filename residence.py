@@ -2,6 +2,7 @@ from __future__ import annotations
 from fastapi import HTTPException
 from abc import ABC, abstractmethod
 from state import OperationalStatus 
+from booking import Residencebooking
 import uuid
 # -------------------------------------------------- 
 class Residence:
@@ -34,7 +35,7 @@ class Room(ABC):
     def __init__(self,  capacity):
         self._room_id = f"room-{uuid.uuid4().hex}"
         self._capacity = capacity
-        self._booking_list = []
+        self._booking_list : list[Residencebooking] = []
         self._operational_status = OperationalStatus.READY
 
     # update status
