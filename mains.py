@@ -1,7 +1,7 @@
 #main
 
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from datetime import datetime
 
 from mock_data import test_mockup_data 
@@ -12,81 +12,81 @@ system = test_mockup_data()
 
 
 class LoginRequest(BaseModel):
-    email: str
-    password: str
+    email: str = Field(..., example="testuser@gmail.com")
+    password: str = Field(..., example="Password123")
 
 class RegisterRequest(BaseModel):
-    user_name: str
-    email: str
-    password: str
-    age: int
-    driver_license: str
+    user_name: str = Field(..., example="TestUser")
+    email: str = Field(..., example="testuser@gmail.com")
+    password: str = Field(..., example="Password123")
+    age: int = Field(..., example="25")
+    driver_license: str = Field(..., example="DL100")
 
 class CreateBookingRequest(BaseModel):
-    user_id: str
+    user_id: str  = Field(..., example="U002")
 
 class ResidenceBookingRequest(BaseModel):
-    user_id: str
-    residence_id: str
-    booking_id: str
-    room_id: str
-    start_date: datetime
-    end_date: datetime
+    user_id: str = Field(..., example="U002")
+    booking_id: str = Field(..., example="booking-f419c6c60fdd4bbf922f2d82cd19b18d")
+    residence_id: str = Field(..., example="R001")
+    room_id: str = Field(..., example="RM001")
+    start_date: datetime = Field(..., example="2026-04-01T12:00:00")
+    end_date: datetime = Field(..., example="2026-04-05T12:00:00")
 
 class VehicleBookingRequest(BaseModel):
-    user_id: str
-    vehicle_id: str
-    booking_id: str
-    driver_id: str | None 
-    start_date: datetime
-    end_date: datetime
+    user_id: str = Field(..., example="U002")
+    booking_id: str = Field(..., example="booking-f419c6c60fdd4bbf922f2d82cd19b18d")
+    vehicle_id: str = Field(..., example="V001")
+    driver_id: str | None = Field(..., example="S001")
+    start_date: datetime = Field(..., example="2026-04-01T10:00:00")
+    end_date: datetime = Field(..., example="2026-04-01T18:00:00")
 
 class ActivityBookingRequest(BaseModel):
-    user_id: str
-    activity_id: str
-    booking_id: str
-    start_date: datetime
-    end_date: datetime
+    user_id: str = Field(..., example="U002")
+    activity_id: str = Field(..., example="A001")
+    booking_id: str = Field(..., example="booking-f419c6c60fdd4bbf922f2d82cd19b18d")
+    start_date: datetime = Field(..., example="2026-04-03T09:00:00")
+    end_date: datetime = Field(..., example="2026-04-03T11:00:00")
 
 class CancelBookingRequest(BaseModel):
-    booking_id: str
-    requester_id: str
+    booking_id: str = Field(..., example="booking-f419c6c60fdd4bbf922f2d82cd19b18d")
+    requester_id: str = Field(..., example="U002")
 
 class PaymentRequest(BaseModel):
-    user_id: str
-    booking_id: str
+    user_id: str = Field(..., example="U002")
+    booking_id: str = Field(..., example="booking-f419c6c60fdd4bbf922f2d82cd19b18d")
 
 class CouponRequest(BaseModel):
-    user_id: str
-    booking_id: str
-    coupon_code: str
+    user_id: str = Field(..., example="U002")
+    booking_id: str = Field(..., example="booking-f419c6c60fdd4bbf922f2d82cd19b18d")
+    coupon_code: str = Field(..., example="DISCOUNT10")
 
 class SlipRequest(BaseModel):
-    user_id: str
-    booking_id: str
-    slip: str
+    user_id: str = Field(..., example="U002")
+    booking_id: str = Field(..., example="booking-f419c6c60fdd4bbf922f2d82cd19b18d")
+    slip: str = Field(..., example="OK123456789")
 
 class ConfirmRequest(BaseModel):
-    staff_id: str
-    booking_id: str
+    staff_id: str = Field(..., example="S001")
+    booking_id: str = Field(..., example="booking-f419c6c60fdd4bbf922f2d82cd19b18d")
 
 class StartInspectionRequest(BaseModel):
-    booking_id: str
+    booking_id: str = Field(..., example="booking-f419c6c60fdd4bbf922f2d82cd19b18d")
 
 class DamageRequest(BaseModel):
-    booking_id: str
-    description: str
-    price: float
+    booking_id: str = Field(..., example="booking-f419c6c60fdd4bbf922f2d82cd19b18d")
+    description: str = Field(..., example="Broken lamp in the room")
+    price: float = Field(..., example=500)
 
 class ConfirmInspectionRequest(BaseModel):
-    booking_id: str
-    damaged: bool
+    booking_id: str = Field(..., example="booking-f419c6c60fdd4bbf922f2d82cd19b18d")
+    damaged: bool = Field(..., example=True)
 
 class ReviewRequest(BaseModel):
-    user_id: str
-    booking_id: str
-    rating: int
-    comment: str
+    user_id: str = Field(..., example="U002")
+    booking_id: str = Field(..., example="booking-f419c6c60fdd4bbf922f2d82cd19b18d")
+    rating: int = Field(..., example=5)
+    comment: str = Field(..., example="The stay was excellent and the staff were very helpful.")
 
 # API endpoints
 @app.post("/login")

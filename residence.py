@@ -1,13 +1,17 @@
 from __future__ import annotations
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from booking import Residencebooking
+
 from fastapi import HTTPException
 from abc import ABC, abstractmethod
 from state import OperationalStatus 
-from booking import Residencebooking
 import uuid
 # -------------------------------------------------- 
 class Residence:
-    def __init__(self,  residence_name):
-        self.__residence_id = f"re-{uuid.uuid4().hex}"
+    def __init__(self,residence_id ,  residence_name):
+        self.__residence_id = residence_id
         self.__residence_name = residence_name
         self.__room_list : list[Room] = []
     
@@ -32,8 +36,8 @@ class Residence:
         return self.__room_list
 
 class Room(ABC):
-    def __init__(self,  capacity):
-        self._room_id = f"room-{uuid.uuid4().hex}"
+    def __init__(self, room_id,  capacity):
+        self._room_id = room_id
         self._capacity = capacity
         self._booking_list : list[Residencebooking] = []
         self._operational_status = OperationalStatus.READY
@@ -82,8 +86,8 @@ class Room(ABC):
         return self._capacity
 
 class NormalRoom(Room):
-    def __init__(self, room_id):
-        super().__init__(room_id, capacity=2)
+    def __init__(self,room_id):
+        super().__init__(room_id,capacity=2)
         self._price = 1000
     
     # getter / setter
@@ -92,8 +96,8 @@ class NormalRoom(Room):
         return self._price
 
 class KingRoom(Room):
-    def __init__(self, room_id):
-        super().__init__(room_id, capacity=4)
+    def __init__(self,room_id):
+        super().__init__(room_id,capacity=4)
         self._price = 3000
 
     # getter / setter

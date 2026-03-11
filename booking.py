@@ -7,7 +7,7 @@ from activity import Activity
 from otherclass import TimeSlot
 from user import User , Staff , Customer
 from otherclass import DamageItem 
-from booking import Residencebooking , Vehiclebooking , Activitybooking
+from typing import Union
 # --------------------------------------------------
 class Booking:
     def __init__(self,  user):
@@ -42,18 +42,18 @@ class Booking:
         self.__purchase_status = PurchaseStatus.CANCELLED
 
     # show
-    def show_all(self):
-        print("\n============ Booking List ============")
-        print("--- Residence Bookings ---")
-        for rb in self.__residencebooking_list:
-            print(f"ID: {rb.item_id} | User: {rb.user.user_name} | Room: {rb.room.room_id} | {rb.time.start_date} → {rb.time.end_date}")
-        print("\n--- Vehicle Bookings ---")
-        for vb in self.__vehiclebooking_list:
-            print(f"ID: {vb.item_id} | User: {vb.user.user_name} | Vehicle: {vb.vehicle.vehicle_id}")
-        print("\n--- Activity Bookings ---")
-        for ab in self.__activitybooking_list:
-            print(f"ID: {ab.item_id} | User: {ab.user.user_name} | Activity: {ab.activity.activity_id}")
-        print("======================================\n")
+    # def show_all(self):
+    #     print("\n============ Booking List ============")
+    #     print("--- Residence Bookings ---")
+    #     for rb in self.__residencebooking_list:
+    #         print(f"ID: {rb.item_id} | User: {rb.user.user_name} | Room: {rb.room.room_id} | {rb.time.start_date} → {rb.time.end_date}")
+    #     print("\n--- Vehicle Bookings ---")
+    #     for vb in self.__vehiclebooking_list:
+    #         print(f"ID: {vb.item_id} | User: {vb.user.user_name} | Vehicle: {vb.vehicle.vehicle_id}")
+    #     print("\n--- Activity Bookings ---")
+    #     for ab in self.__activitybooking_list:
+    #         print(f"ID: {ab.item_id} | User: {ab.user.user_name} | Activity: {ab.activity.activity_id}")
+    #     print("======================================\n")
 
     # check room and calculate price
     def start_room_inspection(self):
@@ -71,7 +71,7 @@ class Booking:
         total -= coupon_value
         return max(total, 0)
 
-    def mark_items_paid(self, items:list[DamageItem , Residencebooking , Vehiclebooking , Activitybooking], final_price):
+    def mark_items_paid(self, items: list[Union[DamageItem, Residencebooking, Vehiclebooking, Activitybooking]], final_price):
         for item in items:
             item.mark_paid()
         self.__user.add_spent(final_price)
@@ -149,10 +149,13 @@ class Residencebooking:
     def detail(self):
         return {
             "booking_id": self.__id,
-            "residence_name": self.__residence.residence_name,
+            "residence_name": self.__residence.residence_name if self.__residence else "Unknown",
             "room_id": self.__room.room_id,
             "customer": self.__user.user_name,
-            "period": f"{self.__time.start_date} to {self.__time.end_date}",
+            "period": (
+                f"{self.__time.start_date} to {self.__time.end_date}"
+                if self.__time else "No time slot"
+            ),
             "total_price": self.__price,
             "paid_status": self.__paid
         }
@@ -274,10 +277,16 @@ class Activitybooking:
 
     # detail
     def detail(self):
+
+        start = self.__time.start_date if self.__time else None
+        end = self.__time.end_date if self.__time else None
+
         return {
             "booking_id": self.__id,
             "activity_name": self.__activity.__class__.__name__,
             "user": self.__user.user_name,
+            "start_date": start,
+            "end_date": end,
             "price": self.__price,
             "status": self.__status
         }

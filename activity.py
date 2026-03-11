@@ -1,13 +1,18 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from booking import Activitybooking
+
 from abc import ABC, abstractmethod
-from booking import Activitybooking
 from user import Staff
 import uuid
 # -------------------------------------------------- 
 class Activity(ABC):
-    def __init__(self, min_age):
-        self._activity_id = f"ac-{uuid.uuid4().hex}"
+    def __init__(self, activity_id, min_age):
+        self._activity_id = activity_id
         self._min_age = min_age
-        self._booking_list : list[Activitybooking] = []
+        self._booking_list : list["Activitybooking"] = []
         self._assigned_staff : list[Staff]= []
 
     # add and remove booking 
@@ -46,8 +51,8 @@ class Activity(ABC):
         return self._activity_id
 
 class Driving(Activity):
-    def __init__(self, activity_id):
-        super().__init__(activity_id, min_age=25)
+    def __init__(self):
+        super().__init__("A001", min_age=25)
         self._price = 1000
 
     # getter /setter
@@ -56,8 +61,8 @@ class Driving(Activity):
         return self._price
 
 class Hiking(Activity):
-    def __init__(self, activity_id):
-        super().__init__(activity_id, min_age=15)
+    def __init__(self):
+        super().__init__("A002", min_age=15)
         self._price = 1200
 
     # getter /setter
