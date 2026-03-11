@@ -1,4 +1,5 @@
-from datetime import date, timedelta
+from otherclass import TimeSlot
+from datetime import datetime, timedelta, date
 
 from system import System
 from user import Customer, Staff, Manager
@@ -7,175 +8,70 @@ from vehicle import Vehicle, Car, Motorcycle
 from activity import Driving, Hiking
 from booking import Booking, Residencebooking, Vehiclebooking, Activitybooking
 from payment import Promotion, Coupon
-from state import LogInStatus, PurchaseStatus
+from system import *
 
 
 def test_mockup_data():
-
     system = System()
 
-    # ---------------- Customers ----------------
-    customer1 = Customer("User1", "user1@gmail.com", "Password123", 25, "Have")
-    customer2 = Customer("User2", "user2@gmail.com", "Password456", 30)
-    customer3 = Customer("User3", "banned@gmail.com", "Password789", 40, "Have")
-    mike_customer = Customer("Mike", "mike@gmail.com", "Password789", 30, "DL003")
+    # ---------------- MANAGER ----------------
+    manager = Manager("Alice Manager","aliceince@gmail.com","Alice_445",driver_license="DL9999")
+    system.add_manager(manager)
 
-    system.add_customer(customer1)
-    system.add_customer(customer2)
-    system.add_customer(customer3)
-    system.add_customer(mike_customer)
+    # ---------------- STAFF ----------------
+    staff1 = Staff("Bob Driver","Bobsocool@gmail.com", "BobBobbo_1" ,driver_license="DL9009")
+    staff2 = Staff("Charlie Staff","charlie@gmail.com","Charlie_123","")
+    system.add_staff(staff1)
+    system.add_staff(staff2)
 
-    customer3.ban_user()
+    # ---------------- CUSTOMER ----------------
+    c1 = Customer("John Doe", "john@gmail.com", "Password123", 30, "DL7777")
+    c2 = Customer("Jane Smith", "jane@gmail.com", "Password123", 22, "")
+    
+    system.add_customer(c1)
+    system.add_customer(c2)
 
-    system.register("Jane", "jane@gmail.com", "Password456", 22, "DL002")
+    # ---------------- COUPON ----------------
+    coupon1 = Coupon("DISC100", 100, date.today() + timedelta(days=30))
+    coupon2 = Coupon("DISC200", 200, date.today() + timedelta(days=30))
 
-    system.authenticate(mike_customer)
+    c1.add_coupon(coupon1)
+    c1.add_coupon(coupon2)
 
-    mike_customer.ban_user()
+    # ---------------- PROMOTION ----------------
+    promo1 = Promotion(0.10, 2000, date.today() + timedelta(days=30))
+    promo2 = Promotion(0.20, 5000, date.today() + timedelta(days=30))
 
-    system.authenticate(customer1)
-    system.authenticate(customer2)
-    system.authenticate(customer3)
+    system.add_promotion(promo1)
+    system.add_promotion(promo2)
 
-    # ---------------- Residence ----------------
-    sea_resort = Residence("Sea Resort")
+    # ---------------- RESIDENCE ----------------
+    # print("aqwsedrftgyhujikolp;derftgyhujik")
+    res1 = Residence("RES001", "Sea View Hotel")
 
-    normal_room = NormalRoom()
-    king_room = KingRoom()
+    room1 = NormalRoom("RM001")
+    room2 = KingRoom("RM002")
 
-    sea_resort.room_list.append(normal_room)
-    sea_resort.room_list.append(king_room)
 
-    system.add_residence(sea_resort)
+    # try:
+    res1.add_room_list(room1)
+    res1.add_room_list(room2)
+    system.add_residence(res1, manager.staff_id)
+    # except:
+    #     pass
 
-    residence_booking_temp = Residencebooking(customer1)
+    # ---------------- VEHICLE ----------------
+    car1 = Car("CAR001")
+    bike1 = Motorcycle("BIKE001")
 
-    # ---------------- Staff ----------------
-    driver_a = Staff("DriverA", "Have")
-    system.add_staff(driver_a)
+    system.add_vehicle(car1, manager.staff_id)
+    system.add_vehicle(bike1, manager.staff_id)
 
-    staff_alice = Staff("Alice", "DL111")
-    staff_bob = Staff("Bob", "DL222")
+    # ---------------- ACTIVITY ----------------
+    activity1 = Driving()
+    activity2 = Hiking()
 
-    system.add_staff(staff_alice)
-    system.add_staff(staff_bob)
-
-    # ---------------- Vehicles ----------------
-    car1 = Car()
-    bike1 = Motorcycle()
-
-    system.add_vehicle(car1)
-    system.add_vehicle(bike1)
-
-    vehicle_booking_temp = Vehiclebooking(car1, customer2, None, driver_a, 200)
-
-    # ---------------- Activities ----------------
-    driving_activity = Driving()
-    hiking_activity = Hiking()
-
-    activity_booking_temp = Activitybooking(driving_activity, customer2, None)
-
-    # ---------------- Manager ----------------
-    boss_manager = Manager("Boss", "Have")
-    system.add_manager(boss_manager)
-
-    # ---------------- Dummy booking ----------------
-    room = DummyRoom(1)
-    vehicle = DummyVehicle(1)
-    activity = DummyActivity()
-
-    booking_user1 = Booking(customer1)
-
-    rb = Residencebooking(None, room, customer1, None, 100)
-    booking_user1.residencebooking_list.append(rb)
-
-    vb = Vehiclebooking(vehicle, customer1, None, driver_a, 200)
-    booking_user1.vehiclebooking_list.append(vb)
-
-    ab = Activitybooking(activity, customer1, None)
-    booking_user1.activitybooking_list.append(ab)
-
-    system.add_booking(booking_user1)
-
-    # ---------------- Booking for mike ----------------
-    booking_mike = Booking(mike_customer)
-
-    class MockItem:
-
-        def __init__(self, item_id, price):
-            self.item_id = item_id
-            self.price = price
-            self.paid = False
-
-        def mark_paid(self):
-            self.paid = True
-
-    item1 = MockItem(1, 1000)
-    item2 = MockItem(2, 500)
-
-    booking_mike.add_residencebooking_list(item1)
-    booking_mike.add_vehiclebooking_list(item2)
-
-    promo = Promotion(
-        0.10,
-        500,
-        date.today() + timedelta(days=5)
-    )
-
-    system.add_promotion(promo)
-
-    coupon = Coupon(
-        50,
-        date.today() + timedelta(days=5)
-    )
-
-    mike_customer.coupons.append(coupon)
-
-    # ---------------- Mock staff booking ----------------
-    mock_staff_user = Staff("MockUser", "DL999")
-    mock_booking = Booking(mock_staff_user)
-
-    booking_mock = Booking()
-    mock_booking.add_residencebooking_list(booking_mock)
-
-    system.add_booking(mock_booking)
-
-    # ---------------- Completed booking ----------------
-    alice_customer = Customer(
-        "Alice",
-        "a@mail",
-        "1234",
-        25,
-        "DL111"
-    )
-
-    system.add_customer(alice_customer)
-    system.authenticate(alice_customer)
-
-    completed_booking = Booking(alice_customer)
-    completed_booking.confirm()
-
-    system.add_booking(completed_booking)
+    system.add_activity(manager.staff_id, activity1)
+    system.add_activity(manager.staff_id, activity2)
 
     return system
-
-
-class DummyActivity:
-
-    def __init__(self):
-        self.price = 100
-
-    def remove_booking(self, booking):
-        pass
-
-
-class DummyRoom(Room):
-
-    def __init__(self, room_id):
-        super().__init__(room_id, 2)
-
-
-class DummyVehicle(Vehicle):
-
-    def __init__(self, vehicle_id):
-        super().__init__(vehicle_id, 4)

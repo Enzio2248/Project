@@ -1,8 +1,13 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from booking import Booking
+    from payment import Coupon
+
 from abc import ABC, abstractmethod
 import uuid
 from state import StaffStatus , LogInStatus
-from payment import Coupon
-from booking import Booking
 # -------------------------------------------------- 
 class User(ABC):
     def __init__(self, user_name, driver_license):
@@ -34,10 +39,10 @@ class Customer(User):
         self.__password = password
         self.__membership = "Bronze"
         self.__age = age
-        self.__booking_list : list[Booking] = []
+        self.__booking_list : list["Booking"] = []
         self.__total_spent = 0
         self.__login_status = LogInStatus.OFFLINE
-        self.__coupons : list[Coupon] = []
+        self.__coupons : list["Coupon"] = []
         self.__is_banned = False
 
     def ban_user(self):
@@ -125,24 +130,32 @@ class Customer(User):
         self.__login_status = value
 
 class Staff(User):
-    def __init__(self, user_name, user_id, driver_license):
-        super().__init__(user_name, user_id, driver_license)
+
+    def __init__(self, user_name, user_mail, password, driver_license):
+        super().__init__(user_name, driver_license)
+
+        self.__user_mail = user_mail
+        self.__password = password
+        self.__login_status = LogInStatus.OFFLINE
         self._status = StaffStatus.FREE
 
-    # work update status
-    def is_available_to_work(self):
-        return self._status == StaffStatus.FREE
+    def check_password(self, password_input):
+        return self.__password == password_input
 
-    def assign_work(self):
-        if self.is_available_to_work():
-            self._status = StaffStatus.BUSY
-            return True
-        return False
+    def login(self):
+        self.__login_status = LogInStatus.ONLINE
 
-    def complete_work(self):
-        self._status = StaffStatus.FREE
+    def logout(self):
+        self.__login_status = LogInStatus.OFFLINE
+
+    @property
+    def email(self):
+        return self.__user_mail
+
+    @property
+    def login_status(self):
+        return self.__login_status
     
-    # getter / setter 
     @property
     def staff_id(self):
         return self._user_id
@@ -150,17 +163,10 @@ class Staff(User):
     @property
     def staff_name(self):
         return self._user_name
-    
-    @property
-    def status(self):
-        return self._status
-
-    @status.setter
-    def status(self, status_value):
-        self._status = status_value
 
 class Manager(Staff):
-    def __init__(self, staff_name, staff_id, driver_license):
-        super().__init__(staff_name, staff_id, driver_license)
+
+    def __init__(self, staff_name, user_mail, password, driver_license):
+        super().__init__(staff_name, user_mail, password, driver_license)
 
     
