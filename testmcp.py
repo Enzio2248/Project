@@ -4,20 +4,9 @@ from pydantic import BaseModel
 from datetime import datetime
 from fastmcp import FastMCP
 
-from SequenceDiagram.CancelBooking import System as CancelSystem
-from mock_data import setup_login_mock, setup_register_mock, setup_booking_mock, setup_residence_mock, setup_vehicle_mock, setup_activity_mock, setup_cancel_mock, setup_payment_mock, setup_confirm_mock, setup_inspection_mock, setup_review_mock
+from mock_data import test_mockup_data 
 
-
-# mock data
-login_system = setup_login_mock()
-register_system = setup_register_mock()
-booking_system = setup_booking_mock()
-residence_system, booking = setup_residence_mock()
-vehicle_system, vehicle_booking = setup_vehicle_mock()
-activity_system, activity_booking = setup_activity_mock()
-cancel_system = setup_cancel_mock()
-payment_system, payment_user, payment_booking = setup_payment_mock()
-confirm_system, confirm_booking_obj = setup_confirm_mock()
+system = test_mockup_data()
 
 mcp = FastMCP("TravelerSystem")
 
@@ -28,7 +17,6 @@ class LoginRequest(BaseModel):
 
 class RegisterRequest(BaseModel):
     user_name: str
-    user_id: str
     email: str
     password: str
     age: int
@@ -38,9 +26,9 @@ class CreateBookingRequest(BaseModel):
     user_id: str
 
 class ResidenceBookingRequest(BaseModel):
-
     user_id: str
     residence_id: str
+    booking_id: str
     room_id: str
     start_date: datetime
     end_date: datetime
@@ -48,19 +36,17 @@ class ResidenceBookingRequest(BaseModel):
 class VehicleBookingRequest(BaseModel):
     user_id: str
     vehicle_id: str
-    driver_id: str | None = None
+    booking_id: str
+    driver_id: str | None 
     start_date: datetime
     end_date: datetime
 
 class ActivityBookingRequest(BaseModel):
     user_id: str
     activity_id: str
+    booking_id: str
     start_date: datetime
     end_date: datetime
-
-class CancelBookingRequest(BaseModel):
-    booking_id: str
-    requester_id: str
 
 class CancelBookingRequest(BaseModel):
     booking_id: str
@@ -82,6 +68,25 @@ class SlipRequest(BaseModel):
 
 class ConfirmRequest(BaseModel):
     staff_id: str
+    booking_id: str
+
+class StartInspectionRequest(BaseModel):
+    booking_id: str
+
+class DamageRequest(BaseModel):
+    booking_id: str
+    description: str
+    price: float
+
+class ConfirmInspectionRequest(BaseModel):
+    booking_id: str
+    damaged: bool
+
+class ReviewRequest(BaseModel):
+    user_id: str
+    booking_id: str
+    rating: int
+    comment: str
 
 
 @mcp.tool()
@@ -91,7 +96,7 @@ def login(data: LoginRequest):
     และทำการตรวจสอบกับข้อมูลที่มีอยู่ในระบบว่าตรงกันหรือไม่ และเช็คว่าโดนแบนหรือไม่
     หากตรงกันจะอนุญาตให้เข้าสู่ระบบได้ และหากไม่ตรงกันจะปฏิเสธการเข้าสู่ระบบ
     """
-    return login_system.authenticate(
+    return system.authenticate(
         data.email,
         data.password
     )
@@ -104,7 +109,7 @@ def register(data: RegisterRequest):
     เช่น ชื่อผู้ใช้งาน, อีเมล, รหัสผ่าน, อายุ และใบขับขี่ จากผู้ใช้งาน 
     และทำการบันทึกข้อมูลเหล่านี้ลงในระบบเพื่อให้ผู้ใช้งานสามารถเข้าสู่ระบบและใช้บริการต่างๆ ได้ในอนาคต
     """
-    return register_system.register(
+    return system.register(
         data.user_name,
         data.email,
         data.password,
@@ -119,70 +124,69 @@ def create_booking(data: CreateBookingRequest):
     เป็นระบบที่ใช้สำหรับการสร้างการจองใหม่ โดยจะรับข้อมูลผู้ใช้งานจากผู้ใช้งาน และทำการสร้างการจองใหม่ในระบบ 
     โดยจะเชื่อมโยงการจองนี้กับผู้ใช้งานที่ทำการจอง และบันทึกข้อมูลการจองลงในระบบเพื่อให้สามารถติดตามและจัดการการจองได้ในอนาคต
     """
-    return booking_system.create_booking(
+    return system.create_booking(
         data.user_id
     )
 
 @mcp.tool()
 def book_residence(data: ResidenceBookingRequest):
-
-    result = residence_system.create_residencebooking(
+    """
+    เป็นระบบที่ใช้สำหรับการจองที่พัก โดยจะรับข้อมูลผู้ใช้งานและรายละเอียดการจองจากผู้ใช้งาน 
+    และทำการสร้างการจองที่พักใหม่ในระบบ
+    """
+    result = system.create_residencebooking(
         data.user_id,
-        booking,
-        "RB001",
+        data.booking_id,
         data.residence_id,
         data.room_id,
         data.start_date,
         data.end_date
     )
 
-    return {
-        "message": "Residence booking successful"
-    }
+    return result
 
 @mcp.tool()
 def book_vehicle(data: VehicleBookingRequest):
-
-    vehicle_system.create_vehiclebooking(
+    """
+    เป็นระบบที่ใช้สำหรับการจองยานพาหนะ โดยจะรับข้อมูลผู้ใช้งานและรายละเอียดการจองจากผู้ใช้งาน 
+    และทำการสร้างการจองยานพาหนะใหม่ในระบบ
+    """
+    result = system.create_vehiclebooking(
         data.user_id,
-        vehicle_booking,
-        "VB001",
+        data.booking_id,
         data.vehicle_id,
         data.driver_id,
         data.start_date,
         data.end_date
     )
 
-    return {"message": "Vehicle booking successful"}
+    return result
 
 @mcp.tool()
 def book_activity(data: ActivityBookingRequest):
-
-    activity_system.create_activitybooking(
+    """
+    เป็นระบบที่ใช้สำหรับการจองกิจกรรม โดยจะรับข้อมูลผู้ใช้งานและรายละเอียดการจองจากผู้ใช้งาน 
+    และทำการสร้างการจองกิจกรรมใหม่ในระบบ
+    """
+    result = system.create_activitybooking(
         data.user_id,
-        activity_booking,
-        "AB001",
+        data.booking_id,
         data.activity_id,
         data.start_date,
         data.end_date
     )
 
-    return {"message": "Activity booking successful"}
-
-@mcp.tool()
-def cancel_booking(data: CancelBookingRequest):
-
-    result = cancel_system.cancel_booking(
-        data.booking_id,
-        data.requester_id
-    )
-
     return result
 
+
 @mcp.tool()
 def cancel_booking(data: CancelBookingRequest):
-
-    result = cancel_system.cancel_booking(
+    """
+    เป็นระบบที่ใช้สำหรับการยกเลิกการจอง โดยจะรับข้อมูลการจองและผู้ที่ทำการยกเลิกจากผู้ใช้งาน 
+    และทำการยกเลิกการจองนั้นในระบบ โดยจะตรวจสอบว่าผู้ที่ทำการยกเลิกเป็นผู้ที่มีสิทธิ์ในการยกเลิกการจองนั้นหรือไม่ 
+    และทำการอัปเดตสถานะของการจองในระบบให้เป็น "ยกเลิก" เพื่อให้สามารถติดตามและจัดการการจองได้อย่างถูกต้องในอนาคต
+    """
+    result = system.cancel_booking(
         data.booking_id,
         data.requester_id
     )
@@ -191,30 +195,97 @@ def cancel_booking(data: CancelBookingRequest):
 
 @mcp.tool()
 def request_payment(data: PaymentRequest):
-
-    return payment_system.request_payment(
-        payment_user,
-        payment_booking
+    """
+    เป็นระบบที่ใช้สำหรับการขอชำระเงิน โดยจะรับข้อมูลผู้ใช้งานและการจองจากผู้ใช้งาน และทำการสร้างคำขอชำระเงินใหม่ในระบบ
+    โดยจะเชื่อมโยงคำขอชำระเงินนี้กับผู้ใช้งานและการจองที่เกี่ยวข้อง และบันทึกข้อมูลคำขอชำระเงินลงในระบบเพื่อให้สามารถติดตามและจัดการคำขอชำระเงินได้ในอนาคต
+    """
+    return system.request_payment(
+        data.user_id,
+        data.booking_id
     )
 
 
 @mcp.tool()
 def select_coupon(data: CouponRequest):
-
-    return payment_system.select_coupon(
-        payment_user,
-        payment_booking,
+    """
+    เป็นระบบที่ใช้สำหรับการเลือกคูปอง โดยจะรับข้อมูลผู้ใช้งานและการจองจากผู้ใช้งาน และทำการเลือกคูปองที่เหมาะสมเพื่อใช้ในการชำระเงิน
+    """
+    return system.select_coupon(
+        data.user_id,
+        data.booking_id,
         data.coupon_code
     )
 
 
 @mcp.tool()
 def submit_payment(data: SlipRequest):
-
-    return payment_system.submit_slip_number(
-        payment_user,
-        payment_booking,
+    """
+    เป็นระบบที่ใช้สำหรับการส่ง slip ชำระเงิน โดยจะรับข้อมูลผู้ใช้งานและการจองจากผู้ใช้งาน และทำการส่ง slip ชำระเงินใหม่ในระบบ
+    """
+    return system.submit_slip_number(
+        data.user_id,
+        data.booking_id,
         data.slip
+    )
+
+@mcp.tool()
+def confirm_booking(data: ConfirmRequest):
+    """
+    เป็นระบบที่ใช้สำหรับการยืนยันการจอง โดยจะรับข้อมูลผู้ใช้งานและ ID ของการจองจากผู้ใช้งาน 
+    และทำการยืนยันการจองนั้นในระบบ
+    โดยจะตรวจสอบว่าผู้ที่ทำการยืนยันเป็นผู้ที่มีสิทธิ์ในการยืนยันการจองนั้นหรือไม่ 
+    และทำการอัปเดตสถานะของการจองในระบบให้เป็น "ยืนยัน" เพื่อให้สามารถติดตามและจัดการการจองได้อย่างถูกต้องในอนาคต
+    """
+    return system.confirm_booking(
+        data.staff_id,
+        data.booking_id
+    )
+
+@mcp.tool()
+def start_inspection(data: StartInspectionRequest):
+    """
+    เป็นระบบที่ใช้สำหรับการเริ่มต้นการตรวจสอบห้องพัก โดยจะรับข้อมูล ID ของการจองจากผู้ใช้งาน 
+    และทำการเริ่มต้นกระบวนการตรวจสอบห้องพักในระบบ
+    """
+    return system.start_room_inspection(
+        data.booking_id
+    )
+
+@mcp.tool()
+def add_damage(data: DamageRequest):
+    """
+    เป็นระบบที่ใช้สำหรับการเพิ่มข้อมูลความเสียหายของห้องพัก โดยจะรับข้อมูล ID ของการจองและรายละเอียดความเสียหายจากผู้ใช้งาน 
+    และทำการเพิ่มข้อมูลความเสียหายลงในระบบ
+    """
+    return system.add_damage(
+        data.booking_id,
+        data.description,
+        data.price
+    )
+
+
+@mcp.tool()
+def confirm_inspection(data: ConfirmInspectionRequest):
+    """
+    เป็นระบบที่ใช้สำหรับการยืนยันการตรวจสอบห้องพัก โดยจะรับข้อมูล ID ของการจองและสถานะความเสียหายจากผู้ใช้งาน 
+    และทำการยืนยันการตรวจสอบห้องพักในระบบ
+    """
+    return system.confirm_inspection_complete(
+        data.booking_id,
+        data.damaged
+    )
+
+@mcp.tool()
+def write_review(data: ReviewRequest):
+    """
+    เป็นระบบที่ใช้สำหรับการเขียนรีวิว โดยจะรับข้อมูลผู้ใช้งานและการจองจากผู้ใช้งาน และทำการสร้างรีวิวใหม่ในระบบ
+    โดยจะเชื่อมโยงรีวิวนี้กับผู้ใช้งานและการจองที่เกี่ยวข้องให้คะแนน 1 - 5 และบันทึกข้อมูลรีวิวลงในระบบเพื่อให้สามารถติดตามและจัดการรีวิวได้ในอนาคต
+    """
+    return system.create_review(
+        data.user_id,
+        data.booking_id,
+        data.rating,
+        data.comment
     )
 
 if __name__ == "__main__":
