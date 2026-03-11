@@ -1,107 +1,108 @@
-# data / mock_data
-
 from datetime import date, timedelta
 
-# LOGIN
 from system import System
-from user  import Customer , Staff , Manager
-from residence import Residence , Room  , NormalRoom , KingRoom
-from vehicle import Vehicle , Car , Motorcycle
-from activity import Driving , Hiking
-from booking import Booking , Residencebooking , Vehiclebooking , Activitybooking
-from payment import Promotion , Coupon
+from user import Customer, Staff, Manager
+from residence import Residence, Room, NormalRoom, KingRoom
+from vehicle import Vehicle, Car, Motorcycle
+from activity import Driving, Hiking
+from booking import Booking, Residencebooking, Vehiclebooking, Activitybooking
+from payment import Promotion, Coupon
 from state import LogInStatus, PurchaseStatus
+
 
 def setup_login_mock():
 
     system = System()
 
-    user1 = Customer("User1", "user1@gmail.com", "Password123", 25, "Have")
-    user2 = Customer("User2", "user2@gmail.com", "Password456", 30)
-    user3 = Customer("User3", "banned@gmail.com", "Password789", 40, "Have")
-    user4 = Customer("John", "john@gmail.com", "Password123", 25, "DL001")
-    user5 = Customer("Jane", "jane@gmail.com", "Password456", 22, "DL002")
-    user6 = Customer("Mike", "mike@gmail.com", "Password789", 30, "DL003")
+    # ---------------- Customers ----------------
+    customer1 = Customer("User1", "user1@gmail.com", "Password123", 25, "Have")
+    customer2 = Customer("User2", "user2@gmail.com", "Password456", 30)
+    customer3 = Customer("User3", "banned@gmail.com", "Password789", 40, "Have")
+    mike_customer = Customer("Mike", "mike@gmail.com", "Password789", 30, "DL003")
 
-    system.add_customer(user1)
-    system.add_customer(user2)
-    system.add_customer(user3)
-    system.add_customer(user4)
-    system.add_customer(user5)
-    system.add_customer(user6)
+    system.add_customer(customer1)
+    system.add_customer(customer2)
+    system.add_customer(customer3)
+    system.add_customer(mike_customer)
 
-    user3.ban_user()
+    customer3.ban_user()
 
-    system.register("John", "john@gmail.com", "Password123", 25, "DL001")
     system.register("Jane", "jane@gmail.com", "Password456", 22, "DL002")
 
-    system.authenticate(user4)
-    system.authenticate(user6)
-    
-    user6.ban_user()
-    
-    system.authenticate(user1)
-    system.authenticate(user2)
-    system.authenticate(user3)
+    system.authenticate(mike_customer)
 
-    res1 = Residence("Sea Resort")
+    mike_customer.ban_user()
 
-    room1 = NormalRoom()
-    room2 = KingRoom()
+    system.authenticate(customer1)
+    system.authenticate(customer2)
+    system.authenticate(customer3)
 
-    res1.room_list.append(room1)
-    res1.room_list.append(room2)
+    # ---------------- Residence ----------------
+    sea_resort = Residence("Sea Resort")
 
-    system.add_residence(res1)
+    normal_room = NormalRoom()
+    king_room = KingRoom()
 
-    booking = Residencebooking(user1)
+    sea_resort.room_list.append(normal_room)
+    sea_resort.room_list.append(king_room)
 
-    staff1 = Staff("DriverA","Have") 
+    system.add_residence(sea_resort)
 
-    system.add_staff(staff1)
+    residence_booking_temp = Residencebooking(customer1)
 
+    # ---------------- Staff ----------------
+    driver_a = Staff("DriverA", "Have")
+    system.add_staff(driver_a)
+
+    staff_alice = Staff("Alice", "DL111")
+    staff_bob = Staff("Bob", "DL222")
+
+    system.add_staff(staff_alice)
+    system.add_staff(staff_bob)
+
+    # ---------------- Vehicles ----------------
     car1 = Car()
     bike1 = Motorcycle()
 
     system.add_vehicle(car1)
     system.add_vehicle(bike1)
 
-    booking = Vehiclebooking(user2)
+    vehicle_booking_temp = Vehiclebooking(customer2)
 
-    act1 = Driving()
-    act2 = Hiking()
+    # ---------------- Activities ----------------
+    driving_activity = Driving()
+    hiking_activity = Hiking()
 
-    booking = Activitybooking(user2)
+    activity_booking_temp = Activitybooking(customer2)
 
-    user0 = Staff("John",  "Have")
-    driver = Staff("Driver",  "Have")
-    manager = Manager("Boss",  "Have")
+    # ---------------- Manager ----------------
+    boss_manager = Manager("Boss", "Have")
+    system.add_manager(boss_manager)
 
-    system.add_manager(manager)
-
-    room = DummyRoom()
-    vehicle = DummyVehicle()
+    # ---------------- Dummy booking ----------------
+    room = DummyRoom(1)
+    vehicle = DummyVehicle(1)
     activity = DummyActivity()
 
-    booking = Booking(user1)
+    booking_user1 = Booking(customer1)
 
-    rb = Residencebooking( None, room, user1, None, 100)
-    booking.residencebooking_list.append(rb)
+    rb = Residencebooking(None, room, customer1, None, 100)
+    booking_user1.residencebooking_list.append(rb)
 
-    vb = Vehiclebooking( vehicle, user1, None, driver, 200)
-    booking.vehiclebooking_list.append(vb)
+    vb = Vehiclebooking(vehicle, customer1, None, driver_a, 200)
+    booking_user1.vehiclebooking_list.append(vb)
 
-    ab = Activitybooking( activity, user1, None)
-    booking.activitybooking_list.append(ab)
+    ab = Activitybooking(activity, customer1, None)
+    booking_user1.activitybooking_list.append(ab)
 
-    system.add_booking(booking)
+    system.add_booking(booking_user1)
 
-
-    booking = Booking(user4)
+    # ---------------- Booking for mike ----------------
+    booking_mike = Booking(mike_customer)
 
     class MockItem:
 
-        def __init__(self,item_id,price):
+        def __init__(self, item_id, price):
             self.item_id = item_id
             self.price = price
             self.paid = False
@@ -109,50 +110,38 @@ def setup_login_mock():
         def mark_paid(self):
             self.paid = True
 
-    item1 = MockItem(1000)
-    item2 = MockItem(500)
+    item1 = MockItem(1, 1000)
+    item2 = MockItem(2, 500)
 
-    booking.add_booking(item1)
-    booking.add_booking(item2)
+    booking_mike.add_booking(item1)
+    booking_mike.add_booking(item2)
 
     promo = Promotion(
         0.10,
         500,
-        date.today()+timedelta(days=5)
+        date.today() + timedelta(days=5)
     )
 
     system.add_promotions(promo)
 
     coupon = Coupon(
         50,
-        date.today()+timedelta(days=5)
+        date.today() + timedelta(days=5)
     )
 
-    user4.coupons.append(coupon)
+    mike_customer.coupons.append(coupon)
 
-    staff1 = Staff("Alice", "DL111")
-    staff2 = Staff("Bob", "DL222")
+    # ---------------- Mock staff booking ----------------
+    mock_staff_user = Staff("MockUser", "DL999")
+    mock_booking = Booking(mock_staff_user)
 
-    system.add_staff(staff1)
-    system.add_staff(staff2)
+    booking_mock = Booking()
+    mock_booking._Booking__residencebooking_list.append(booking_mock)
 
-    user = Staff("MockUser", "DL999")
+    system.add_booking(mock_booking)
 
-    booking = Booking(user)
-
-    staff = Staff("Alice", "DL111")
-
-    user = Staff("MockUser", "DL999")
-
-    booking = Booking( user)
-
-    residence = Booking()
-
-    booking._Booking__residencebooking_list.append(residence)
-    
-    system.add_booking(booking)
-
-    user = Customer(
+    # ---------------- Completed booking ----------------
+    alice_customer = Customer(
         "Alice",
         "a@mail",
         "1234",
@@ -160,18 +149,16 @@ def setup_login_mock():
         "DL111"
     )
 
-    # force login
-    user._Customer__login_status = LogInStatus.ONLINE
+    alice_customer._Customer__login_status = LogInStatus.ONLINE
 
-    booking = Booking( user)
+    completed_booking = Booking(alice_customer)
+    completed_booking._Booking__purchase_status = PurchaseStatus.COMPLETED
 
-    # make booking completed
-    booking._Booking__purchase_status = PurchaseStatus.COMPLETED
+    system.add_user(alice_customer)
+    system.add_booking(completed_booking)
 
-    system.add_user(user)
-    system.add_booking(booking)
+    return system, alice_customer, completed_booking
 
-    return system, user, booking
 
 class DummyActivity:
 
@@ -181,10 +168,12 @@ class DummyActivity:
     def remove_booking(self, booking):
         pass
 
+
 class DummyRoom(Room):
 
     def __init__(self, room_id):
         super().__init__(room_id, 2)
+
 
 class DummyVehicle(Vehicle):
 

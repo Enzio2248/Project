@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
 import uuid
 from residence import Residence
-from user import User , Staff
 from state import StaffStatus , LogInStatus
 # -------------------------------------------------- 
 class User(ABC):

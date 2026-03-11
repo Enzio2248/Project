@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
 import uuid
-from vehicle import Vehicle
 from state import ServiceStatus
 # -------------------------------------------------- 
 class Vehicle(ABC):
