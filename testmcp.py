@@ -92,6 +92,15 @@ class BanUserRequest(BaseModel):
     manager_id: str
     user_id: str
 
+class AddVehicle(BaseModel):
+    manager_id : str
+    vehicle_id : str
+
+class AddActivty(BaseModel):
+    manager_id: str
+    activity_id : str
+    activity_name : str
+
 
 @mcp.tool()
 def login(data: LoginRequest):
@@ -342,7 +351,7 @@ def list_vehicles():
 @mcp.tool()
 def list_activities():
     """
-    ใช้สำหรับดูรายการกิจกรรมทั้งหมด
+    ใช้สำหรับดูรายการกิจกรรมทั้งหมดในระบบ
     """
     return [
         {
@@ -369,13 +378,15 @@ def ban_user(data: BanUserRequest):
     เป็นระบบที่ใช้สำหรับการแบนผู้ใช้งานโดยผู้จัดการ (Manager)
     โดยจะรับ manager_id และ user_id ของผู้ใช้ที่ต้องการแบน
     และทำการเปลี่ยนสถานะของผู้ใช้เป็น banned
-    ทำให้ผู้ใช้งานไม่สามารถเข้าสู่ระบบได้
+    ทำให้ผู้ใช้งานไม่สามารถเข้าสู่ระบบได้หรือทำการจองได้
     """
 
     return system.ban_user(
         data.manager_id,
         data.user_id
     )
+
+
 
 if __name__ == "__main__":
     mcp.run()
