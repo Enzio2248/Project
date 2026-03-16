@@ -203,7 +203,6 @@ class System:
         if user.login_status != LogInStatus.ONLINE:
             raise HTTPException(status_code=401, detail="User must be logged in ")
         
-
         new_booking = Booking(user)
 
         self.__bookings.append(new_booking)
@@ -286,7 +285,6 @@ class System:
     def select_vehicle(self, vehicle_id):
 
         # print("vehicle list:", [v.vehicle_id for v in self.__vehicle_list])
-
         for vehicle in self.__vehicle_list:
             if vehicle.vehicle_id == vehicle_id:
                 return vehicle
