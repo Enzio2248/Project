@@ -8,18 +8,17 @@ from vehicle import Vehicle, Car, Motorcycle
 from activity import Driving, Hiking
 from booking import Booking, Residencebooking, Vehiclebooking, Activitybooking
 from payment import Promotion, Coupon
-from system import *
 
 
 def test_mockup_data():
     system = System()
 
     # ---------------- MANAGER ----------------
-    manager = Manager("Alice Manager","aliceince@gmail.com","Alice_445",driver_license="DL9999")
+    manager = Manager("Alice Manager","aliceince@gmail.com","Alice_445","DL9999")
     system.add_manager(manager)
 
     # ---------------- STAFF ----------------
-    staff1 = Staff("Bob Driver","Bobsocool@gmail.com", "BobBobbo_1" ,driver_license="DL9009")
+    staff1 = Staff("Bob Driver","Bobsocool@gmail.com","BobBobbo_1","DL9009")
     staff2 = Staff("Charlie Staff","charlie@gmail.com","Charlie_123","")
     system.add_staff(staff1)
     system.add_staff(staff2)
@@ -46,7 +45,6 @@ def test_mockup_data():
     system.add_promotion(promo2)
 
     # ---------------- RESIDENCE ----------------
-    # print("aqwsedrftgyhujikolp;derftgyhujik")
     res1 = Residence("RES001", "Sea View Hotel")
 
     room1 = NormalRoom("RM001")
