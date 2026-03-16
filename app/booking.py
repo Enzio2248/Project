@@ -1,3 +1,5 @@
+
+from __future__ import annotations
 from otherclass import DamageItem
 from state import PurchaseStatus 
 import uuid
@@ -6,7 +8,6 @@ from vehicle import Vehicle
 from activity import Activity
 from otherclass import TimeSlot
 from user import User , Staff , Customer
-from otherclass import DamageItem 
 from typing import Union
 # --------------------------------------------------
 class Booking:
